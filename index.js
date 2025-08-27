@@ -1,17 +1,22 @@
 const express = require('express');
 const app = express();
 const cors = require('cors');
-const hairList = require('./Data/hairList');
-const browsList = require('./Data/browsList');
-const services = require('./Server/services');
+const mongoose = require('mongoose');
 const path = require('path');
 const User = require('./Models/users');
-const mongoose = require('mongoose');
+const services = require('./Server/services');
+const makeList = require('./Data/makeList');
+const ciliosList = require('./Data/ciliosList');
+const hairList = require('./Data/hairList');
+const browsList = require('./Data/browsList');
+
 
 app.use(cors());
 app.use(express.json());
-app.use('/imgsobrancelha', express.static(path.join(__dirname, 'public/imgsobrancelha')));
 app.use('/imagens', express.static(path.join(__dirname, 'public/imagens')));
+app.use('/imgsobrancelha', express.static(path.join(__dirname, 'public/imgsobrancelha')));
+app.use('/imgmake', express.static(path.join(__dirname, 'public/imgmake')));
+app.use('/imgcilios', express.static(path.join(__dirname, 'public/imgcilios')));
 
 mongoose.connect("mongodb://localhost:27017/appoint", {})
 .then(() => {
@@ -65,7 +70,27 @@ app.get('/servico/sobrancelhas', async (req, res) => {
   
 });
 
-app.post("/agendar", async (req, res) => {
+app.get('/servico/maquiagem', async (req, res) => {
+  try {
+    res.status(200).json(makeList); 
+  } 
+  catch (err) {
+    res.status(500).json({ error: 'Erro ao carregar o Serviço' });
+  }
+  
+});
+
+app.get('/servico/cilios', async (req, res) => {
+  try {
+    res.status(200).json(ciliosList); 
+  } 
+  catch (err) {
+    res.status(500).json({ error: 'Erro ao carregar o Serviço' });
+  }
+  
+});
+
+app.post('/marcar', async (req, res) => {
   try {
     const { name, number, description, Date, time } = req.body;
 
