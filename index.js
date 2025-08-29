@@ -9,6 +9,8 @@ const makeList = require('./Data/makeList');
 const ciliosList = require('./Data/ciliosList');
 const hairList = require('./Data/hairList');
 const browsList = require('./Data/browsList');
+const appointmentService = require('./Server/appointmentService');
+
 
 
 app.use(cors());
@@ -17,6 +19,7 @@ app.use('/imagens', express.static(path.join(__dirname, 'public/imagens')));
 app.use('/imgsobrancelha', express.static(path.join(__dirname, 'public/imgsobrancelha')));
 app.use('/imgmake', express.static(path.join(__dirname, 'public/imgmake')));
 app.use('/imgcilios', express.static(path.join(__dirname, 'public/imgcilios')));
+
 
 mongoose.connect("mongodb://localhost:27017/appoint", {})
 .then(() => {
@@ -90,37 +93,36 @@ app.get('/servico/cilios', async (req, res) => {
   
 });
 
-app.post('/marcar', async (req, res) => {
+app.post("/marcar",async (req,res) => {
   try {
-    const { name, number, description, Date, time } = req.body;
-
-    if (!name || !number || !description || !Date || !time) {
-      return res.status(400).json({ error: "Preencha todos os campos." });
-    }
-
-    const userExists = await User.findOne({ number });
-    if (userExists) {
-      return res.status(409).json({ error: "Número já cadastrado." });
-    }
-
-    const newUser = new User({
-      name,
-      number,
-      description,
-      Date,
-      time,
-    });
-
-    await newUser.save();
-
-    res.status(201).json({ message: "Horário agendado com sucesso!" });
-
-  } catch (err) {
-    console.error("Erro ao agendar:", err);
-    res.status(500).json({ error: "Erro interno ao agendar horário." });
+    const createdUser = await appointmentService.Create(req.body);
+    res.status(201).json({ message: "Agendamento criado com sucesso", createdUser });
+  } catch (error) {
+    res.status(400).json({ message: error.message });
   }
 });
 
+app.get("/userservice",async (req,res) => {
+    var userservice = await appointmentService.FindAll(false);
+    res.json(userservice);
+});
+
+app.delete('/userservice/:id', async (req, res) => {
+  const { id } = req.params;
+
+  try {
+
+   const deletedUser = await appointmentService.Delete(id);
+
+    if (!deletedUser) {
+      return res.status(404).json({ mensagem: 'Usuário não encontrado' });
+    }
+
+    res.status(200).json({ mensagem: 'Usuário deletado com sucesso', deletedUser });
+  } catch (error) {
+    res.status(500).json({ mensagem: error.message });
+  }
+});
 
 app.listen(3003, () => {
     console.log("API rodando em http://localhost:3003");
